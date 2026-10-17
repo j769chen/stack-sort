@@ -1,12 +1,37 @@
 import { deadEndTask } from './deadEnd';
-import { type Rods, canPour, generateLevel, isHoopsSolved, levelSpec } from './hoops/logic';
-import { runTask } from './task';
-import { canStack, generateTower, isTowerSolved, towerSpec } from './towersort/logic';
+import { type Rods, canPour, generateLevel, hoopsRules, isHoopsSolved, levelSpec, pour } from './hoops/logic';
+import { type Task, runTask } from './task';
+import { canStack, generateTower, isTowerSolved, solveTower, towerRules, towerSpec } from './towersort/logic';
+import type { Move } from './useHistory';
 
 const ringSort = (cap: number) =>
-  [(rods: Rods, from: number, to: number) => canPour(rods, from, to, cap), (rods: Rods) => isHoopsSolved(rods, cap)] as const;
+  [
+    (rods: Rods, from: number, to: number) => canPour(rods, from, to, cap),
+    (rods: Rods) => isHoopsSolved(rods, cap),
+    hoopsRules(cap).movesLeft,
+  ] as const;
+
+const towerSort = (sizes: number) =>
+  [
+    (rods: Rods, from: number, to: number) => canStack(rods, from, to, sizes),
+    (rods: Rods) => isTowerSolved(rods, sizes),
+    towerRules(sizes).movesLeft,
+  ] as const;
 
 const isDeadEnd = (...args: Parameters<typeof deadEndTask>) => runTask(deadEndTask(...args));
+
+function check(task: Task<boolean>) {
+  for (let steps = 0; ; steps++) {
+    const step = task.next();
+    if (step.done) return { dead: step.value, steps };
+  }
+}
+
+function boardsAlong(start: Rods, solution: Move[]) {
+  const boards = [start];
+  for (const [from, to] of solution) boards.push(pour(boards.at(-1)!, from, to));
+  return boards;
+}
 
 const LEVEL_50_DEAD_END = [
   [3, 4, 2, 4, 5, 5],
@@ -64,8 +89,18 @@ describe('deadEndTask', () => {
   });
 
   it('does not call a position a dead end when it runs out of room to prove it', () => {
-    const [fits, solved] = ringSort(6);
-    expect(isDeadEnd(LEVEL_50_DEAD_END, fits, solved, 300)).toBe(false);
+    expect(isDeadEnd(LEVEL_50_DEAD_END, ...ringSort(6), 300)).toBe(false);
+  });
+
+  it('heads for a solution, so a board that can still be solved takes few positions to clear', () => {
+    const { rods, solution } = generateLevel(100);
+    const ringChecks = boardsAlong(rods, solution).map((board) => check(deadEndTask(board, ...ringSort(6))));
+    expect(ringChecks.filter(({ dead, steps }) => dead || steps >= 1000)).toEqual([]);
+
+    const { sizes } = towerSpec(30);
+    const tower = generateTower(30);
+    const towerChecks = boardsAlong(tower, solveTower(tower, sizes)!).map((board) => check(deadEndTask(board, ...towerSort(sizes))));
+    expect(towerChecks.filter(({ dead, steps }) => dead || steps >= 1000)).toEqual([]);
   });
 
   it('pauses between positions so it can run in slices', () => {
@@ -73,9 +108,7 @@ describe('deadEndTask', () => {
   });
 
   it('works with Tower Sort rules', () => {
-    const { sizes } = towerSpec(5);
-    const fits = (rods: Rods, from: number, to: number) => canStack(rods, from, to, sizes);
-    expect(isDeadEnd(generateTower(5), fits, (rods) => isTowerSolved(rods, sizes))).toBe(false);
-    expect(isDeadEnd([[2, 1], [5, 4, 3], [8, 7, 6], [0], []], (rods, from, to) => canStack(rods, from, to, 3), (rods) => isTowerSolved(rods, 3))).toBe(false);
+    expect(isDeadEnd(generateTower(5), ...towerSort(towerSpec(5).sizes))).toBe(false);
+    expect(isDeadEnd([[2, 1], [5, 4, 3], [8, 7, 6], [0], []], ...towerSort(3))).toBe(false);
   });
 });

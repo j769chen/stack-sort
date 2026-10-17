@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { theme } from '../../theme';
 import { LevelSortScreen } from '../LevelSortScreen';
 import { levelDeals } from './deals';
-import { type Deal, type Rods, canPour, isRodComplete, levelSpec, topRun } from './logic';
+import { type Deal, type Rods, canPour, hoopsRules, isRodComplete, levelSpec, topRun } from './logic';
 import { RodSortGame, type ShellProps, type SortRules } from './RodSortGame';
 
 const colorName = (color: number) => theme.ringNames[color]!;
@@ -32,6 +32,7 @@ function ringSortRules(capacity: number): SortRules {
     capacity,
     goal: 'Sort each color onto its own rod',
     canPour: (rods, from, to) => canPour(rods, from, to, capacity),
+    movesLeft: hoopsRules(capacity).movesLeft,
     isRodComplete: (rod) => isRodComplete(rod, capacity),
     ringName: colorName,
     rodLabel: (rods, rod) => rodLabel(rods, rod, capacity),

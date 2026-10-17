@@ -48,7 +48,7 @@ export function isTowerSolved(rods: Rods, sizes: number): boolean {
 
 const NODE_LIMIT = 50_000;
 
-function towerRules(sizes: number): SearchRules {
+export function towerRules(sizes: number): SearchRules {
   const size = (rod: string, i: number) => rod.charCodeAt(i) % sizes;
   const color = (rod: string, i: number) => Math.floor(rod.charCodeAt(i) / sizes);
   const settledCount = (rod: string) => {
