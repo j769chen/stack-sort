@@ -1,10 +1,15 @@
-import { bestStreak, dailyDate, dailyKey, dailyLabel, dailyStreak, monthCells, previousDay, shareText } from './daily';
+import { bestStreak, dailyDate, dailyKey, dailyLabel, dailyStreak, midday, monthCells, previousDay, shareText } from './daily';
 
 describe('daily keys', () => {
   it('keys each local calendar day', () => {
     expect(dailyKey(new Date(2026, 9, 16, 23, 59))).toBe(20261016);
     expect(dailyKey(new Date(2026, 9, 17, 0, 1))).toBe(20261017);
-    expect(dailyDate(20261016)).toEqual(new Date(2026, 9, 16));
+    expect(dailyDate(20261016)).toEqual(new Date(2026, 9, 16, 12));
+  });
+
+  it('builds dates at midday, clear of a clock change at midnight', () => {
+    for (const key of [20260405, 20260906, 20261101, 20270101]) expect(dailyDate(key).getHours()).toBe(12);
+    expect(midday(2026, 8, 6)).toEqual(new Date(2026, 8, 6, 12));
   });
 
   it('steps back a day across month and year ends', () => {

@@ -4,8 +4,10 @@ export function dailyKey(date: Date): number {
   return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
 }
 
+export const midday = (year: number, month: number, day: number) => new Date(year, month, day, 12);
+
 export function dailyDate(key: number): Date {
-  return new Date(Math.floor(key / 10000), (Math.floor(key / 100) % 100) - 1, key % 100);
+  return midday(Math.floor(key / 10000), (Math.floor(key / 100) % 100) - 1, key % 100);
 }
 
 function addDays(key: number, days: number): number {
@@ -36,11 +38,11 @@ export function bestStreak(solved: LevelStars): number {
 }
 
 export function monthCells(year: number, month: number): (number | null)[] {
-  const lead = (new Date(year, month, 1).getDay() + 6) % 7;
-  const days = new Date(year, month + 1, 0).getDate();
+  const lead = (midday(year, month, 1).getDay() + 6) % 7;
+  const days = midday(year, month + 1, 0).getDate();
   return [
     ...Array.from({ length: lead }, () => null),
-    ...Array.from({ length: days }, (_, i) => dailyKey(new Date(year, month, i + 1))),
+    ...Array.from({ length: days }, (_, i) => dailyKey(midday(year, month, i + 1))),
   ];
 }
 

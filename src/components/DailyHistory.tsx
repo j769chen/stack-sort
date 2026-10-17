@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BackHandler, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { bestStreak, dailyDate, dailyLabel, dailyStreak, monthCells } from '../daily';
+import { bestStreak, dailyDate, dailyLabel, dailyStreak, midday, monthCells } from '../daily';
 import { MAX_STARS, totalStars, useStars } from '../stars';
 import { themedStyles } from '../theme';
 import { Header } from './Header';
@@ -9,6 +9,9 @@ import { Stars } from './Stars';
 
 const SIDE = 16;
 const GAP = 6;
+const BORDER = 2;
+const DAY_FONT = 15;
+const LINE_HEIGHT = 1.2;
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 type Props = { today: number; onBack: () => void };
@@ -17,7 +20,9 @@ export function DailyHistory({ today, onBack }: Props) {
   const styles = useStyles();
   const solved = useStars('daily');
   const { width } = useWindowDimensions();
-  const starSize = Math.min(10, (Math.min(width, 480) - SIDE * 2 - GAP * 6) / 35);
+  const cell = (Math.min(width, 480) - SIDE * 2 - GAP * 6) / 7;
+  const starSize = Math.min(10, cell / 5);
+  const maxTextScale = Math.max(1, (cell - BORDER * 2) / (LINE_HEIGHT * (DAY_FONT + starSize)));
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -33,7 +38,7 @@ export function DailyHistory({ today, onBack }: Props) {
   const [shown, setShown] = useState(months(now));
   const year = Math.floor(shown / 12);
   const month = shown % 12;
-  const monthName = new Date(year, month, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const monthName = midday(year, month, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const cells = monthCells(year, month);
   const weeks = Array.from({ length: Math.ceil(cells.length / 7) }, (_, week) =>
     Array.from({ length: 7 }, (_, day) => cells[week * 7 + day] ?? null),
@@ -110,8 +115,10 @@ export function DailyHistory({ today, onBack }: Props) {
                       accessible
                       accessibilityLabel={label}
                     >
-                      <Text style={styles.dayNumber}>{key % 100}</Text>
-                      {stars > 0 && <Stars count={stars} size={starSize} />}
+                      <Text style={styles.dayNumber} maxFontSizeMultiplier={maxTextScale}>
+                        {key % 100}
+                      </Text>
+                      {stars > 0 && <Stars count={stars} size={starSize} maxFontSizeMultiplier={maxTextScale} />}
                     </View>
                   </View>
                 );
@@ -145,12 +152,12 @@ const useStyles = themedStyles((colors) =>
       aspectRatio: 1,
       borderRadius: 10,
       backgroundColor: colors.card,
-      borderWidth: 2,
+      borderWidth: BORDER,
       borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
     today: { borderColor: colors.accent },
-    dayNumber: { fontSize: 15, fontWeight: '700', color: colors.ink },
+    dayNumber: { fontSize: DAY_FONT, fontWeight: '700', color: colors.ink },
   }),
 );

@@ -57,6 +57,19 @@ beforeEach(async () => {
 afterEach(() => jest.restoreAllMocks());
 
 describe('HanoiScreen', () => {
+  it('shows a loading screen with a working Back while saved progress loads', async () => {
+    let finishRead: (value: string | null) => void = () => {};
+    jest.spyOn(AsyncStorage, 'getItem').mockImplementationOnce(() => new Promise((resolve) => (finishRead = resolve)));
+    const onBack = jest.fn();
+    await renderAsync(<HanoiScreen onBack={onBack} />);
+    expect(screen.getByLabelText('Loading')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Tower Stack' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    await act(async () => finishRead('2'));
+    expect(await screen.findByText('Level 2')).toBeOnTheScreen();
+  });
+
   it('starts level 1 with three disks on the left peg', async () => {
     await start();
     expect(rodText(0)).toBe('3,2,1');
