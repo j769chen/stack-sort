@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GameShell, type Progress, confirmDiscard } from '../../components/GameShell';
 import { LevelSelect } from '../../components/LevelSelect';
+import { LoadingScreen } from '../../components/LoadingScreen';
 import { WithOverlay } from '../../components/WithOverlay';
 import { RodButtons } from '../../components/RodButtons';
 import { useStars } from '../../stars';
@@ -31,7 +32,7 @@ export function HanoiScreen({ onBack }: { onBack: () => void }) {
   const [picking, setPicking] = useState(false);
   const [round, setRound] = useState(0);
   const [progress, setProgress] = useState<Progress>('new');
-  if (!loaded) return null;
+  if (!loaded) return <LoadingScreen title="Tower Stack" onBack={onBack} />;
   const next = level >= HANOI_MAX_LEVEL ? 1 : level + 1;
   const levels = picking && (
     <LevelSelect

@@ -7,6 +7,16 @@ import { DailyHistory } from './DailyHistory';
 
 const TODAY = 20261016;
 
+let mockWidth = 750;
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+  __esModule: true,
+  default: () => ({ width: mockWidth, height: 1334, scale: 2, fontScale: 1 }),
+}));
+
+afterEach(() => {
+  mockWidth = 750;
+});
+
 type Node = { props: { style?: StyleProp<ViewStyle> } };
 
 const columnOf = (key: number) => {
@@ -60,6 +70,20 @@ describe('DailyHistory', () => {
       const week = columnOf(key).parent!;
       expect(week.children.map((column: Node) => StyleSheet.flatten(column.props.style))).toEqual(Array(7).fill({ flex: 1 }));
     }
+  });
+
+  it.each([320, 390, 1024])('caps day text so a number and its stars stay inside the cell at %p points wide', async (width) => {
+    mockWidth = width;
+    recordStars('daily', 20261015, 2);
+    await render(<DailyHistory today={TODAY} onBack={jest.fn()} />);
+    const inside = (Math.min(width, 480) - 16 * 2 - 6 * 6) / 7 - 2 * 2;
+    const number = screen.getByText('15');
+    const stars = screen.getByLabelText('2 of 3 stars');
+    const scale = number.props.maxFontSizeMultiplier;
+    expect(stars.props.maxFontSizeMultiplier).toBe(scale);
+    expect(scale).toBeGreaterThanOrEqual(1);
+    const lines = StyleSheet.flatten(number.props.style).fontSize + StyleSheet.flatten(stars.props.style).fontSize;
+    expect(1.2 * lines * scale).toBeLessThanOrEqual(inside + 1e-9);
   });
 
   it('pages back as far as the first solved month and no further than this one', async () => {
