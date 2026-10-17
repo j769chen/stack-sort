@@ -13,6 +13,7 @@ export type SortRules = {
   sizes?: number;
   goal: string;
   canPour: (rods: Rods, from: number, to: number) => boolean;
+  movesLeft: (rods: string[]) => number;
   isRodComplete: (rod: number[]) => boolean;
   ringName: (ring: number) => string;
   rodLabel: (rods: Rods, rod: number) => string;
@@ -52,7 +53,7 @@ export function RodSortGame({ start, rules, ...shell }: Props) {
 
   useEffect(() => {
     const controller = new AbortController();
-    const check = deadEndTask(rods, rules.canPour, (state) => isSolved(state, rules));
+    const check = deadEndTask(rods, rules.canPour, (state) => isSolved(state, rules), rules.movesLeft);
     runInSlices(check, { signal: controller.signal }).then(
       (dead) => dead && setDeadEnd(rods),
       () => {},

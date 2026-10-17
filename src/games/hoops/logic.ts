@@ -71,10 +71,9 @@ function bottomRun(rod: string): number {
   return run;
 }
 
-function hoopsRules(start: Rods, cap: number): SearchRules {
-  const colors = Math.max(0, ...start.flat()) + 1;
-  const runSums = new Array<number>(colors);
-  const runMaxes = new Array<number>(colors);
+export function hoopsRules(cap: number): SearchRules {
+  const runSums = new Array<number>(MAX_COLORS);
+  const runMaxes = new Array<number>(MAX_COLORS);
   const uniform = (rod: string) => rod.length === 0 || bottomRun(rod) === rod.length;
   return {
     capacity: cap,
@@ -94,14 +93,14 @@ function hoopsRules(start: Rods, cap: number): SearchRules {
         runSums[color]! += run;
         runMaxes[color] = Math.max(runMaxes[color]!, run);
       }
-      for (let color = 0; color < colors; color++) bound += runSums[color]! - runMaxes[color]!;
+      for (let color = 0; color < MAX_COLORS; color++) bound += runSums[color]! - runMaxes[color]!;
       return bound;
     },
   };
 }
 
 function searchHoops(start: Rods, cap: number, nodeLimit: number): Task<Move[] | null> {
-  return searchRods(start, hoopsRules(start, cap), nodeLimit);
+  return searchRods(start, hoopsRules(cap), nodeLimit);
 }
 
 export function solveHoops(start: Rods, cap: number, nodeLimit = NODE_LIMIT): Move[] | null {
